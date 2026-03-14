@@ -15,9 +15,17 @@ def create_tables():
         order_id TEXT PRIMARY KEY,
         order_type TEXT,
         created_timestamp TIMESTAMP,
+        
         brand_name TEXT,
+        brand_clean TEXT,
+
         payment_status TEXT,
+        payment_status_clean TEXT,
+
         order_status TEXT,
+        order_status_clean TEXT,
+
+        journey_classification TEXT,
 
         promo_type TEXT,
         member_id TEXT,
@@ -39,6 +47,7 @@ def create_tables():
 
         channel TEXT,
         is_user_logged BOOLEAN,
+        user_type TEXT,
         payment_method TEXT,
 
         payable_amount DOUBLE PRECISION,

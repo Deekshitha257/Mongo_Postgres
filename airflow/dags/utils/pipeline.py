@@ -113,9 +113,18 @@ def run_pipeline():
             row.orderId,
             row.orderType,
             row.createdTimestamp,
+            
+
             row.brandName,
+            row.brand_clean,
+
             row.paymentStatus,
+            row.payment_status_clean,
+
             row.orderStatus,
+            row.order_status_clean,
+
+            row.journey_classification,
 
             row.hotel_promoType,
             row.voucher_memberId,
@@ -138,6 +147,7 @@ def run_pipeline():
 
             row.channel,
             row.isUserLogged,
+            row.user_type,
             row.paymentMethod,
 
             row.payableAmount,
@@ -160,9 +170,14 @@ def run_pipeline():
                 order_id,
                 order_type,
                 created_timestamp,
+                
                 brand_name,
+                brand_clean,
                 payment_status,
+                payment_status_clean,
                 order_status,
+                order_status_clean,
+                journey_classification,
                 promo_type,
                 member_id,
                 voucher_error_message,
@@ -178,6 +193,7 @@ def run_pipeline():
                 error_timestamp,
                 channel,
                 is_user_logged,
+                user_type,
                 payment_method,
                 payable_amount,
                 base_price,

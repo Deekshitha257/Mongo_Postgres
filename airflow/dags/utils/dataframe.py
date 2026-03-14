@@ -27,6 +27,94 @@ def get_room_status(hotel):
     return ",".join(statuses) if statuses else None
 
 
+def clean_brand(brand):
+
+    if not brand:
+        return "Unknown"
+
+    brand = brand.lower()
+
+    if brand.startswith("taj"):
+        return "Taj"
+
+    if brand.startswith("vivanta"):
+        return "Vivanta"
+
+    if brand.startswith("ginger"):
+        return "Ginger"
+
+    if brand.startswith("gateway"):
+        return "Gateway"
+
+    if brand.startswith("ama"):
+        return "Ama"
+
+    if "seleqtions" in brand or "selections" in brand:
+        return "Seleqtions"
+
+    return "Unknown"
+
+
+def classify_journey(promo_type, member_id):
+
+    promo = (promo_type or "").upper()
+
+    if promo == "OFFER":
+        return "Offer Journey"
+
+    if promo == "PROMOTION" and member_id not in [None, ""]:
+        return "Voucher Journey"
+
+    if promo in ["COUPON", "CORPORATE", "IATA", "PROMOTION"]:
+        return "Special Code Journey"
+
+    return "Default Journey"
+
+
+def clean_payment_status(status):
+
+    if not status:
+        return "Unknown"
+
+    status = status.upper()
+
+    if status in ["FAILED", "ABORTED", "TIMEOUT", "NOT_FOUND"]:
+        return "Failed"
+
+    if status in ["CHARGED", "PARTIALLY CHARGED"]:
+        return "Successful"
+
+    if status in ["PENDING", "REFUND PENDING"]:
+        return "Pending"
+
+    return "Pending"
+
+
+def clean_order_status(status):
+
+    if not status:
+        return "Unknown"
+
+    status = status.upper()
+
+    if status in [
+        "FAILED",
+        "PAYMENT FAILED",
+        "CANCELLED",
+        "PARTIALLY CANCELLED",
+        "PARTIAL_CANCELLED"
+    ]:
+        return "Failed"
+
+    if status in ["SUCCESS", "CONFIRMED"]:
+        return "Successful"
+
+    if status == "INITIATED":
+        return "Initiated"
+
+    return "Pending"
+
+
 def flatten_orders(docs):
 
     rows = []
@@ -49,6 +137,13 @@ def flatten_orders(docs):
             loyalty = item.get("loyalty") or {}
 
             voucher = hotel.get("voucherRedemption") or {}
+            brand_name = doc.get("brandName")
+            payment_status = doc.get("paymentStatus")
+            order_status = doc.get("orderStatus")
+
+            promo_type = hotel.get("promoType")
+            member_id = voucher.get("memberId")
+            is_user_logged = doc.get("isUserLogged")
 
             row = {
 
@@ -56,10 +151,22 @@ def flatten_orders(docs):
                 "orderId": doc.get("orderId"),
                 "orderType": doc.get("orderType"),
                 "createdTimestamp": doc.get("createdTimestamp"),
-                "brandName": doc.get("brandName"),
-                "paymentStatus": doc.get("paymentStatus"),
-                "orderStatus": doc.get("orderStatus"),
+                
+                
+                
                 "channel": doc.get("channel"),
+                "brandName": brand_name,
+                "brand_clean": clean_brand(brand_name),
+
+                "paymentStatus": payment_status,
+                "payment_status_clean": clean_payment_status(payment_status),
+
+                "orderStatus": order_status,
+                "order_status_clean": clean_order_status(order_status),
+                "isUserLogged": is_user_logged,
+                "user_type": "User Logged" if is_user_logged else "Non Logged",
+
+                "journey_classification": classify_journey(promo_type, member_id),
 
                 "paymentMethod": doc.get("paymentMethod"),
                 "isUserLogged": doc.get("isUserLogged"),
