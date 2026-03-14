@@ -1,4 +1,5 @@
 import pandas as pd
+from .dataframe import clean_brand
 
 def flatten_enquiries(docs):
 
@@ -12,16 +13,22 @@ def flatten_enquiries(docs):
         if created_ts is None:
             created_ts = None
 
+        brand = doc.get("brand")                 
+       
+        is_logged = str(doc.get("isUserLoggedIn")).lower() == "true"
+
         row = {
             "enquiryId": doc.get("enquiryId"),
             "createdTimestamp": created_ts,
-            "brand": doc.get("brand"),
+            "brand": brand,
+            "brand_clean": clean_brand(brand), 
             "status": doc.get("status"),
             "preferredHotel": doc.get("preferredHotel"),
             "errorMessage": doc.get("errorMessage"),
             "type": doc.get("type"),
             "channel": doc.get("channel"),
-            "isUserLoggedIn": str(doc.get("isUserLoggedIn")).lower() == "true"
+            "isUserLoggedIn": is_logged,
+            "user_type": "User Logged" if is_logged else "Non Logged"   
         }
 
         rows.append(row)

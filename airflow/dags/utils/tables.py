@@ -72,18 +72,34 @@ def create_tables():
     );
     """)
 
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS order_errors_dashboard(
+    id SERIAL PRIMARY KEY,
+    order_id TEXT,
+    error_message TEXT,
+    error_type TEXT,
+    status_code INTEGER,
+    status_description TEXT,
+    request_endpoint TEXT,
+    error_timestamp TIMESTAMP
+    );
+    """)
+
    
     cur.execute("""
     CREATE TABLE IF NOT EXISTS enquiry_dashboard(
         enquiry_id TEXT PRIMARY KEY,
         created_timestamp TIMESTAMP,
         brand TEXT,
+        brand_clean TEXT,
         status TEXT,
         preferred_hotel TEXT,
         error_message TEXT,
         type TEXT,
         channel TEXT,
-        is_user_logged_in TEXT
+        is_user_logged_in TEXT,
+        user_type TEXT
     );
     """)
 

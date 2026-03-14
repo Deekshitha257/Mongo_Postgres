@@ -1,7 +1,7 @@
 import logging
 import pandas as pd
 from psycopg2.extras import execute_values
-
+from .dataframe import safe_get
 from .db import get_mongo, get_pg
 from .dataframe import flatten_orders
 from .tables import create_tables
@@ -43,6 +43,7 @@ def run_pipeline():
     # ---------------------------
 
     txn_rows = []
+    error_rows = []
 
     for doc in docs:
 
@@ -79,6 +80,27 @@ def run_pipeline():
                         txn.get("txnNetAmount"),
                     )
                 )
+
+    
+
+
+        errors = doc.get("errorMessages") or []
+
+        if isinstance(errors, list):
+
+            for err in errors:
+
+                error_rows.append(
+                    (
+                        order_id,
+                        err.get("errorMessage"),
+                        err.get("type"),
+                        safe_get(err, "statusCode", "value"),
+                        safe_get(err, "statusCode", "description"),
+                        err.get("requestEndPoint"),
+                        err.get("timestamp")
+                    )
+                )   
 
 
     # ---------------------------
@@ -244,19 +266,45 @@ def run_pipeline():
                 txn_rows
             )
 
+            logging.info(f"{len(txn_rows)} transaction rows inserted")
+
         except Exception as e:
             print("❌ TXN INSERT FAILED")
             print("ERROR:", e)
-
-            for txn in txn_rows[:20]:
-                print("TXN:", txn)
-
             raise
 
-        inserted_txns = cur.rowcount
-        logging.info(f"{inserted_txns} transaction rows inserted")
 
+    # ---------------------------
+    # Insert Order Errors
+    # ---------------------------
+
+    if error_rows:
+
+        execute_values(
+            cur,
+            """
+            INSERT INTO order_errors_dashboard(
+                order_id,
+                error_message,
+                error_type,
+                status_code,
+                status_description,
+                request_endpoint,
+                error_timestamp
+            )
+            VALUES %s
+            ON CONFLICT DO NOTHING
+            """,
+            error_rows
+        )
+
+        logging.info(f"{len(error_rows)} error rows inserted")
+
+
+    # Commit everything
     conn.commit()
+
+        
 
     # ---------------------------
     # Log total orders
@@ -322,12 +370,14 @@ def run_enquiry_pipeline():
             enquiry_id,
             created_timestamp,
             brand,
+            brand_clean,
             status,
             preferred_hotel,
             error_message,
             type,
             channel,
-            is_user_logged_in
+            is_user_logged_in,
+            user_type
         )
         VALUES %s
         ON CONFLICT (enquiry_id) DO NOTHING
