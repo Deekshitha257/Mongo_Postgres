@@ -1,5 +1,6 @@
 import logging
 import pandas as pd
+from datetime import datetime, timedelta
 from psycopg2.extras import execute_values
 from .dataframe import safe_get
 from .db import get_mongo, get_pg
@@ -23,10 +24,20 @@ def run_pipeline():
 
     logging.info("Fetching orders from MongoDB")
 
-    query = {}
+    start_date = datetime.now() - timedelta(days=365)
 
     if last_ts:
-        query = {"createdTimestamp": {"$gt": last_ts}}
+        query = {
+            "createdTimestamp": {
+                "$gt": max(last_ts, start_date)
+            }
+        }
+    else:
+        query = {
+            "createdTimestamp": {
+                "$gte": start_date
+            }
+        }
 
     docs = list(mongo.order.find(query).batch_size(5000))
     logging.info(f"{len(docs)} documents fetched from MongoDB")
@@ -340,10 +351,20 @@ def run_enquiry_pipeline():
 
     last_ts = get_checkpoint(conn, "enquiry_pipeline")
 
-    query = {}
+    start_date = datetime.now() - timedelta(days=365)
 
     if last_ts:
-        query = {"createdTimestamp": {"$gt": last_ts}}
+        query = {
+            "createdTimestamp": {
+                "$gt": max(last_ts, start_date)
+            }
+        }
+    else:
+        query = {
+            "createdTimestamp": {
+                "$gte": start_date
+            }
+        }
 
     docs = list(mongo.enquiryMongodbDto.find(query).batch_size(5000))
 
