@@ -39,7 +39,7 @@ def run_pipeline():
             }
         }
 
-    docs = list(mongo.order.find(query).batch_size(5000))
+    docs = list(mongo.order.find(query).batch_size(1000))
     logging.info(f"{len(docs)} documents fetched from MongoDB")
 
     if not docs:
@@ -55,6 +55,7 @@ def run_pipeline():
 
     txn_rows = []
     error_rows = []
+    room_rows = []
 
     for doc in docs:
 
@@ -112,6 +113,30 @@ def run_pipeline():
                         err.get("timestamp")
                     )
                 )   
+
+
+        for item in doc.get("orderLineItems", []):
+
+            hotel = item.get("hotel") or {}
+
+            rooms = hotel.get("rooms", [])
+
+            for room in rooms:
+
+                room_rows.append(
+                    (
+                        doc.get("orderId"),
+                        room.get("roomNumber"),
+                        room.get("roomName"),
+                        room.get("roomType"),
+                        room.get("status"),
+                        room.get("price"),
+                        room.get("taxAmount"),
+                        room.get("grandTotal"),
+                        room.get("checkIn"),
+                        room.get("checkOut")
+                    )
+                )
 
 
     # ---------------------------
@@ -172,12 +197,6 @@ def run_pipeline():
 
             
 
-            row.errorMessage,
-            row.error_type,
-            row.error_status_code,
-            row.error_status_description,
-            row.error_timestamp,
-
             row.channel,
             row.isUserLogged,
             row.user_type,
@@ -219,11 +238,6 @@ def run_pipeline():
                 room_status,
                 membership_purchase_type,
                 epicure_type,
-                error_message,
-                error_type,
-                error_status_code,
-                error_status_description,
-                error_timestamp,
                 channel,
                 is_user_logged,
                 user_type,
@@ -312,6 +326,36 @@ def run_pipeline():
         logging.info(f"{len(error_rows)} error rows inserted")
 
 
+
+    # ---------------------------
+    # Insert Rooms
+    # ---------------------------
+
+    if room_rows:
+
+        execute_values(
+            cur,
+            """
+            INSERT INTO rooms_dashboard(
+                order_id,
+                room_number,
+                room_name,
+                room_type,
+                status,
+                price,
+                tax,
+                grand_total,
+                check_in,
+                check_out
+            )
+            VALUES %s
+            """,
+            room_rows
+        )
+
+        logging.info(f"{len(room_rows)} room rows inserted")
+
+
     # Commit everything
     conn.commit()
 
@@ -366,7 +410,7 @@ def run_enquiry_pipeline():
             }
         }
 
-    docs = list(mongo.enquiryMongodbDto.find(query).batch_size(5000))
+    docs = list(mongo.enquiryMongodbDto.find(query).batch_size(1000))
 
     logging.info(f"{len(docs)} enquiry documents fetched")
 

@@ -38,12 +38,6 @@ def create_tables():
         membership_purchase_type TEXT,
         epicure_type TEXT,
 
-        
-        error_message TEXT,
-        error_type TEXT,
-        error_status_code TEXT,
-        error_status_description TEXT,
-        error_timestamp TIMESTAMP,
 
         channel TEXT,
         is_user_logged BOOLEAN,
@@ -83,6 +77,23 @@ def create_tables():
     status_description TEXT,
     request_endpoint TEXT,
     error_timestamp TIMESTAMP
+    );
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS rooms_dashboard(
+    id SERIAL PRIMARY KEY,
+    order_id TEXT REFERENCES orders_dashboard(order_id),
+    room_number INT,
+    room_name TEXT,
+    room_type TEXT,
+    status TEXT,
+    price DOUBLE PRECISION,
+    tax DOUBLE PRECISION,
+    grand_total DOUBLE PRECISION,
+    check_in DATE,
+    check_out DATE,
+    UNIQUE(order_id, room_number)
     );
     """)
 
