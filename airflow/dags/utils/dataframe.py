@@ -54,15 +54,21 @@ def clean_brand(brand):
 
     return "Unknown"
 
+def has_voucher(voucher_obj):
+    return (
+        isinstance(voucher_obj, dict)
+        and voucher_obj.get("memberId") not in [None, ""]
+    )
 
-def classify_journey(promo_type, member_id):
+
+def classify_journey(promo_type, member_id, voucher_obj=None):
 
     promo = (promo_type or "").upper()
 
     if promo == "OFFER":
         return "Offer Journey"
 
-    if promo == "PROMOTION" and member_id not in [None, ""]:
+    if promo == "PROMOTION" and has_voucher(voucher_obj):
         return "Voucher Journey"
 
     if promo in ["COUPON", "CORPORATE", "IATA", "PROMOTION"]:
@@ -166,7 +172,7 @@ def flatten_orders(docs):
                 "isUserLogged": is_user_logged,
                 "user_type": "User Logged" if is_user_logged else "Non Logged",
 
-                "journey_classification": classify_journey(promo_type, member_id),
+                "journey_classification": classify_journey(promo_type, member_id,voucher),
 
                 "paymentMethod": doc.get("paymentMethod"),
                 "isUserLogged": doc.get("isUserLogged"),
