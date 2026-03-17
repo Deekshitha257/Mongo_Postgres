@@ -74,7 +74,7 @@ def classify_journey(promo_type, member_id, voucher_obj=None):
     if promo in ["COUPON", "CORPORATE", "IATA", "PROMOTION"]:
         return "Special Code Journey"
 
-    return "Default Journey"
+    return "Standard Journey"
 
 
 def clean_payment_status(status):
